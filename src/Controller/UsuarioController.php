@@ -45,7 +45,7 @@ class UsuarioController extends AbstractController
     }
 
     #[Route('/actualizar-contraseña', name: 'app_usuario_real_edit', methods: ['PUT'])]
-  public function update(EntityManagerInterface $entityManager, Request $request, Security $security, GeneradorDeMensajes $generadorDeMensajes): JsonResponse
+  public function update(EntityManagerInterface $entityManager, Request $request, Security $security,UserPasswordHasherInterface $passwordHasher, GeneradorDeMensajes $generadorDeMensajes): JsonResponse
   {
     //Obtiene el id del usuario usando el token JWT
     $usuarioLogueado = $security->getUser();
@@ -57,15 +57,18 @@ class UsuarioController extends AbstractController
     }
 
     // Obtiene el valor de la nueva contraseña desde body de la request
-    $password = $request->request->get('password');
+    $plainPassword = $request->request->get('password');
 
     // Si el campo de la nueva contraseña está vacío responde con un error 422
-    if ($password == null){
+    if ($plainPassword == null){
       return $this->json(['error'=>'Se debe enviar la nueva contraseña.'], 422);
     }
+    
+    //Hashea la contraseña
+    $hashedPassword = $passwordHasher->hashPassword($usuario, $plainPassword);
 
     // Se actualizan los datos a la entidad
-    $usuario->setPassword($password);
+    $usuario->setPassword($hashedPassword);
 
     $data=['id' => $usuario->getId(),'password' => $usuario->getPassword()];
 
