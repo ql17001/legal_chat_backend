@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use Symfony\Bundle\SecurityBundle\Security;
 use App\Entity\Usuario;
 use App\Service\GeneradorDeMensajes;
 use Doctrine\ORM\EntityManagerInterface;
@@ -45,6 +46,38 @@ class UsuarioController extends AbstractController
         ]);
     }
 
+
+  #[Route('/actualizar-contraseña', name: 'app_usuario_real_edit', methods: ['PUT'])]
+  public function updatePassword(EntityManagerInterface $entityManager, Request $request, Security $security,UserPasswordHasherInterface $passwordHasher, GeneradorDeMensajes $generadorDeMensajes): JsonResponse
+  {
+    //Obtiene el id del usuario usando el token JWT
+    $usuarioLogueado = $security->getUser();
+
+    if($usuarioLogueado !== null && $usuarioLogueado instanceof Usuario)
+    {
+      $usuarioLogueadoObj = ['id' => $usuarioLogueado->getId()];
+      $usuario = $entityManager->getRepository(Usuario::class)->find($usuarioLogueadoObj['id']);
+    }
+
+    // Obtiene el valor de la nueva contraseña desde body de la request
+    $plainPassword = $request->request->get('password');
+
+    // Si el campo de la nueva contraseña está vacío responde con un error 422
+    if ($plainPassword == null){
+      return $this->json(['error'=>'Se debe enviar la nueva contraseña.'], 422);
+    }
+    
+    //Hashea la contraseña
+    $hashedPassword = $passwordHasher->hashPassword($usuario, $plainPassword);
+
+    // Se actualizan los datos a la entidad
+    $usuario->setPassword($hashedPassword);
+
+    $data=['id' => $usuario->getId(),'password' => $usuario->getPassword()];
+    
+    return $this->json([[$generadorDeMensajes->generarRespuesta("Se ha actualizado la contraseña.", $data)]]);
+  }
+
     #[Route('/actualizar-informacion', name: 'app_usuario_real_edit', methods: ['PUT'])]
   public function update(EntityManagerInterface $entityManager, Request $request, GeneradorDeMensajes $generadorDeMensajes, Security $security): JsonResponse
   {
@@ -80,5 +113,4 @@ class UsuarioController extends AbstractController
 
     return $this->json([$generadorDeMensajes->generarRespuesta("Se actualizó la información del usuario.", $data)]);
   }
-  
 }
