@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use Symfony\Bundle\SecurityBundle\Security;
 use App\Entity\Usuario;
 use App\Service\GeneradorDeMensajes;
 use Doctrine\ORM\EntityManagerInterface;
@@ -42,4 +43,36 @@ class UsuarioController extends AbstractController
             $generadorDeMensajes->generarRespuesta("Se guardó el nuevo usuario.", $data)
         ]);
     }
+
+    #[Route('/actualizar-contraseña', name: 'app_usuario_real_edit', methods: ['PUT'])]
+  public function update(EntityManagerInterface $entityManager, Request $request, Security $security, GeneradorDeMensajes $generadorDeMensajes): JsonResponse
+  {
+    //Obtiene el id del usuario usando el token JWT
+    $usuarioLogueado = $security->getUser();
+
+    if($usuarioLogueado !== null && $usuarioLogueado instanceof Usuario)
+    {
+      $usuarioLogueadoObj = ['id' => $usuarioLogueado->getId()];
+      $usuario = $entityManager->getRepository(Usuario::class)->find($usuarioLogueadoObj['id']);
+    }
+
+    // Obtiene el valor de la nueva contraseña desde body de la request
+    $password = $request->request->get('password');
+
+    // Si el campo de la nueva contraseña está vacío responde con un error 422
+    if ($password == null){
+      return $this->json(['error'=>'Se debe enviar la nueva contraseña.'], 422);
+    }
+
+    // Se actualizan los datos a la entidad
+    $usuario->setPassword($password);
+
+    $data=['id' => $usuario->getId(),'password' => $usuario->getPassword()];
+
+    // Se aplican los cambios de la entidad en la bd
+    $entityManager->flush();
+
+    return $this->json([[$generadorDeMensajes->generarRespuesta("Se ha actualizado la contraseña.", $data)]]);
+   
+  }
 }
