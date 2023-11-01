@@ -46,12 +46,12 @@ class UsuarioController extends AbstractController
     }
 
     #[Route('/perfil', name: 'app_usuario_real_read', methods: ['GET'])]
-    public function read(Security $security): JsonResponse
+    public function read(GeneradorDeMensajes $generadorDeMensajes, Security $security): JsonResponse
 
   {
  // se obtiene los datos del usuario mediante el token
  $usuarioLogueado = $security->getUser();
- if($usuarioLogueado !== null && $usuarioLogueado instanceof UsuarioReal){
+ if($usuarioLogueado !== null && $usuarioLogueado instanceof Usuario){
    $usuarioLogueadoObj = [
   'nombre' => $usuarioLogueado->getNombre(),
   'apellido' => $usuarioLogueado->getApellido(),
