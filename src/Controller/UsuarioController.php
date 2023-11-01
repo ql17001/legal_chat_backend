@@ -45,6 +45,28 @@ class UsuarioController extends AbstractController
         ]);
     }
 
+   #[Route('/perfil', name: 'app_usuario_real_read', methods: ['GET'])]
+    public function read(GeneradorDeMensajes $generadorDeMensajes, Security $security): JsonResponse
+  {
+ // se obtiene los datos del usuario mediante el token
+ $usuarioLogueado = $security->getUser();
+ if($usuarioLogueado !== null && $usuarioLogueado instanceof Usuario){
+   $usuarioLogueadoObj = [
+  'nombre' => $usuarioLogueado->getNombre(),
+  'apellido' => $usuarioLogueado->getApellido(),
+  'email' => $usuarioLogueado->getEmail(),
+  'dui' => $usuarioLogueado->getDui(),
+  ];
+  return $this->json($usuarioLogueadoObj);
+    } 
+    else {
+      // Manejo del caso en el que no se cumple la condición
+      $errorResponse = [
+          'error' => 'Usuario no encontrado o no válido',
+      ];
+      return $this->json($errorResponse, 404); // "No encontrado".
+    }
+  }
 
   #[Route('/actualizar-contraseña', name: 'app_usuario_real_edit', methods: ['PUT'])]
   public function updatePassword(EntityManagerInterface $entityManager, Request $request, Security $security,UserPasswordHasherInterface $passwordHasher, GeneradorDeMensajes $generadorDeMensajes): JsonResponse
