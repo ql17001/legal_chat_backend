@@ -144,7 +144,7 @@ class UsuarioController extends AbstractController
       $usuario->setNombre($request->request->get('nombre'));
       $usuario->setApellido($request->request->get('apellido'));
       $usuario->setDui($request->request->get('dui'));
-      $usuario->setRoles($request->request->get('roles'));
+      $usuario->setRoles(json_decode($request->request->get('roles')));
       $usuario->setActivo($request->request->get('activo'));
       $hashedPassword = $passwordHasher->hashPassword($usuario, $plainPassword);
       $usuario->setPassword($hashedPassword);
