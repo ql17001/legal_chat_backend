@@ -44,7 +44,7 @@ class UsuarioController extends AbstractController
     }
 
       #[Route('/usuario/{id}', name: 'app_usuario_delete', methods: ['DELETE'])]
-  public function delete(EntityManagerInterface $entityManager, int $id, Request $request): JsonResponse
+  public function delete(EntityManagerInterface $entityManager, int $id, GeneradorDeMensajes $generadorDeMensajes, Request $request): JsonResponse
   {
 
     // Buscar usuario que se desea borrar ingresando su id
