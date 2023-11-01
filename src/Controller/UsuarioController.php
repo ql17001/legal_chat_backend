@@ -45,6 +45,23 @@ class UsuarioController extends AbstractController
         ]);
     }
 
+    #[Route('/perfil', name: 'app_usuario_real_read', methods: ['GET'])]
+    public function read(Security $security): JsonResponse
+
+  {
+ // se obtiene los datos del usuario mediante el token
+ $usuarioLogueado = $security->getUser();
+ if($usuarioLogueado !== null && $usuarioLogueado instanceof UsuarioReal){
+   $usuarioLogueadoObj = [
+  'nombre' => $usuarioLogueado->getNombre(),
+  'apellido' => $usuarioLogueado->getApellido(),
+  'email' => $usuarioLogueado->getEmail(),
+  'dui' => $usuarioLogueado->getDui(),
+  ];
+  return $this->json($usuarioLogueadoObj);
+    } 
+  }
+
     #[Route('/actualizar-informacion', name: 'app_usuario_real_edit', methods: ['PUT'])]
   public function update(EntityManagerInterface $entityManager, Request $request, GeneradorDeMensajes $generadorDeMensajes, Security $security): JsonResponse
   {
