@@ -66,7 +66,7 @@ class UsuarioController extends AbstractController
           'error' => 'Usuario no encontrado o no válido',
       ];
       return $this->json($errorResponse, 404); // "No encontrado".
-  }
+    }
   }
 
     #[Route('/actualizar-informacion', name: 'app_usuario_real_edit', methods: ['PUT'])]
