@@ -134,4 +134,35 @@ class UsuarioController extends AbstractController
 
     return $this->json([$generadorDeMensajes->generarRespuesta("Se actualizó la información del usuario.", $data)]);
   }
+
+  #[Route('/crear', name: 'app_usuario_create', methods: ['POST'])]
+  public function createUser(EntityManagerInterface $entityManager, Request $request, UserPasswordHasherInterface $passwordHasher, GeneradorDeMensajes $generadorDeMensajes): JsonResponse
+  {
+      $usuario = new Usuario();
+      $usuario->setEmail($request->request->get('email'));
+      $plainPassword = $request->request->get('password');
+      $usuario->setNombre($request->request->get('nombre'));
+      $usuario->setApellido($request->request->get('apellido'));
+      $usuario->setDui($request->request->get('dui'));
+      $usuario->setRoles($request->request->get('roles'));
+      $usuario->setActivo($request->request->get('activo'));
+      $hashedPassword = $passwordHasher->hashPassword($usuario, $plainPassword);
+      $usuario->setPassword($hashedPassword);
+      // Se avisa a Doctrine que queremos guardar un nuevo registro pero no se ejecutan las consultas
+      $entityManager->persist($usuario);
+      // Se ejecutan las consultas SQL para guardar el nuevo registro
+      $entityManager->flush();
+      $data[] = [
+          'id' => $usuario->getId(),
+          'email' => $usuario->getEmail(),
+          'nombre' => $usuario->getNombre(),
+          'apellido' => $usuario->getApellido(),
+          'dui' => $usuario->getDui(),
+          'activo'=> $usuario->isActivo(),
+          'rol'=> $usuario->getRoles()
+      ];            
+      return $this->json([
+          $generadorDeMensajes->generarRespuesta("Se guardó el nuevo usuario.", $data)
+      ]);
+  }
 }
