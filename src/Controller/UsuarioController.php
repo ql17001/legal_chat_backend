@@ -43,7 +43,7 @@ class UsuarioController extends AbstractController
         ]);
     }
 
-      #[Route('/usuario/{id}', name: 'app_usuario_delete', methods: ['DELETE'])]
+      #[Route('/{id}', name: 'app_usuario_delete', methods: ['DELETE'])]
   public function delete(EntityManagerInterface $entityManager, int $id, GeneradorDeMensajes $generadorDeMensajes, Request $request): JsonResponse
   {
 
@@ -58,12 +58,12 @@ class UsuarioController extends AbstractController
     // En caso de encontrar al usuario se remueve de la base de registro al usuario seleccionado
     $entityManager->remove($usuario);
 
-    $data=['id' => $usuario->getId(), 'nombre' => $usuario->getNombre(), 'edad' => $usuario->getEdad()];
+    $data=['id' => $usuario->getId(), 'nombre' => $usuario->getNombre()];
 
     // Se aplican los cambios y se actualiza la BD 
     $entityManager->flush();
 
-    return $this->json([$generadorDeMensajes->generarRespuesta("Se ha eliminado al usuario correctamente.", $data)
+    return $this->json([$generadorDeMensajes->generarRespuesta("Se ha eliminado al usuario correctamente.", $data)]);
   }
 }
 
