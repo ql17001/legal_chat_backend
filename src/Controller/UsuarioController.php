@@ -63,7 +63,7 @@ class UsuarioController extends AbstractController
     // Se aplican los cambios y se actualiza la BD 
     $entityManager->flush();
 
-    return $this->json(['message'=>'Se ha eliminado al usuario correctamente.', 'data' => $data]);
+    return $this->json([$generadorDeMensajes->generarRespuesta("Se ha eliminado al usuario correctamente.", $data)
   }
 }
 
