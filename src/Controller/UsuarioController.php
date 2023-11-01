@@ -60,6 +60,13 @@ class UsuarioController extends AbstractController
   ];
   return $this->json($usuarioLogueadoObj);
     } 
+    else {
+      // Manejo del caso en el que no se cumple la condición
+      $errorResponse = [
+          'error' => 'Usuario no encontrado o no válido',
+      ];
+      return $this->json($errorResponse, 404); // "No encontrado".
+  }
   }
 
     #[Route('/actualizar-informacion', name: 'app_usuario_real_edit', methods: ['PUT'])]
