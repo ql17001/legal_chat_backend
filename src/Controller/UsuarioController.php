@@ -165,8 +165,39 @@ class UsuarioController extends AbstractController
           $generadorDeMensajes->generarRespuesta("Se guardó el nuevo usuario.", $data)
       ]);
   }
+
+  #[Route('', name: 'app_usuario_read_all', methods: ['GET'])]
+  public function readAll(EntityManagerInterface $entityManager, Request $request, GeneradorDeMensajes $generadorDeMensajes): JsonResponse
+  {
+    $limit = 20;
+
+    $page = $request->get('page', 1);
+
+    $activo = $request->get('activo', null);
+
+    $usuarios = $entityManager->getRepository(Usuario::class)->findAllWithPagination($page, $limit, $activo);
+
+    $total = $usuarios->count();
+
+    $totalPages = (int) ceil($total/$limit);
+
+    $data = [];
+  
+    foreach ($usuarios as $usuario) {
+        $data[] = [
+            'id' => $usuario->getId(),
+            'nombre' => $usuario->getNombre(),
+            'apellido' => $usuario->getApellido(),
+            'email' => $usuario->getEmail(),
+            'rol' => $usuario->getRoles()[0],
+        ];
+    }
+    
+    return $this->json($generadorDeMensajes->generarRespuesta('Se proceso la solicitud con exito.', ['totalPages' => $totalPages, 'total' => $total, 'usuarios' => $data]) ); 
+  }
+
       #[Route('/{id}', name: 'app_usuario_delete', methods: ['DELETE'])]
-  public function delete(EntityManagerInterface $entityManager, int $id, GeneradorDeMensajes $generadorDeMensajes, Request $request): JsonResponse
+  public function delete(EntityManagerInterface $entityManager, int $id, GeneradorDeMensajes $generadorDeMensajes): JsonResponse
   {
 
     // Buscar usuario que se desea borrar ingresando su id
@@ -177,10 +208,10 @@ class UsuarioController extends AbstractController
       return $this->json(['error'=>'No fue posible encontrar usuario con el siguiente id: '.$id], 404);
     }
 
-    // En caso de encontrar al usuario se remueve de la base de registro al usuario seleccionado
-    $entityManager->remove($usuario);
+    // En caso de encontrar al usuario se actualiza el atributo activo a falso al usuario seleccionado
+    $usuario->setActivo(0);
 
-    $data=['id' => $usuario->getId(), 'nombre' => $usuario->getNombre()];
+    $data=['id' => $usuario->getId(), 'nombre' => $usuario->getNombre(), 'apellido' => $usuario->getApellido()];
 
     // Se aplican los cambios y se actualiza la BD 
     $entityManager->flush();
