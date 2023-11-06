@@ -99,8 +99,8 @@ class UsuarioController extends AbstractController
     return $this->json([[$generadorDeMensajes->generarRespuesta("Se ha actualizado la contraseña.", $data)]]);
   }
 
-    #[Route('/actualizar-informacion', name: 'app_usuario_real_edit', methods: ['PUT'])]
-  public function update(EntityManagerInterface $entityManager, Request $request, GeneradorDeMensajes $generadorDeMensajes, Security $security): JsonResponse
+    #[Route('/actualizar-informacion', name: 'app_usuario_profile_edit', methods: ['PUT'])]
+  public function updateProfile(EntityManagerInterface $entityManager, Request $request, GeneradorDeMensajes $generadorDeMensajes, Security $security): JsonResponse
   {
 
     // obtiene el id del usuario mediante el token
@@ -145,7 +145,7 @@ class UsuarioController extends AbstractController
       $usuario->setApellido($request->request->get('apellido'));
       $usuario->setDui($request->request->get('dui'));
       $usuario->setRoles(json_decode($request->request->get('roles')));
-      $usuario->setActivo($request->request->get('activo'));
+      $usuario->setActivo(1);
       $hashedPassword = $passwordHasher->hashPassword($usuario, $plainPassword);
       $usuario->setPassword($hashedPassword);
       // Se avisa a Doctrine que queremos guardar un nuevo registro pero no se ejecutan las consultas
@@ -209,14 +209,43 @@ class UsuarioController extends AbstractController
     }
 
     // En caso de encontrar al usuario se actualiza el atributo activo a falso al usuario seleccionado
-    $usuario->setActivo(0);
+    $usuario->setActivo(!$usuario->isActivo());
 
     $data=['id' => $usuario->getId(), 'nombre' => $usuario->getNombre(), 'apellido' => $usuario->getApellido()];
 
     // Se aplican los cambios y se actualiza la BD 
     $entityManager->flush();
 
-    return $this->json([$generadorDeMensajes->generarRespuesta("Se ha eliminado al usuario correctamente.", $data)]);
+    return $this->json($generadorDeMensajes->generarRespuesta("Se ha eliminado al usuario correctamente.", $data));
+  }
+
+  #[Route('/{id}', name: 'app_usuario_update', methods: ['PUT'])]
+  public function update(EntityManagerInterface $entityManager, int $id, GeneradorDeMensajes $generadorDeMensajes, Request $request, UserPasswordHasherInterface $passwordHasher): JsonResponse
+  {
+
+    // Buscar usuario que se desea borrar ingresando su id
+    $usuario = $entityManager->getRepository(Usuario::class)->find($id);
+
+    // Si no se encuentra al usuario con el id ingresado, el programa devuelve error 404
+    if (!$usuario) {
+      return $this->json($generadorDeMensajes->generarRespuesta('No fue posible encontrar usuario con el siguiente id: '.$id), 404);
+    }
+
+    $usuario->setEmail($request->request->get('email'));
+    $plainPassword = $request->request->get('password');
+    $usuario->setNombre($request->request->get('nombre'));
+    $usuario->setApellido($request->request->get('apellido'));
+    $usuario->setDui($request->request->get('dui'));
+    $usuario->setRoles(json_decode($request->request->get('roles')));
+    $hashedPassword = $passwordHasher->hashPassword($usuario, $plainPassword);
+    $usuario->setPassword($hashedPassword);
+
+    $data=['id' => $usuario->getId(), 'nombre' => $usuario->getNombre(), 'apellido' => $usuario->getApellido()];
+
+    // Se aplican los cambios y se actualiza la BD 
+    $entityManager->flush();
+
+    return $this->json($generadorDeMensajes->generarRespuesta("Se ha actualizado el usuario correctamente.", $data));
   }
 }
 
