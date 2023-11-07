@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\UsuarioRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -38,6 +40,14 @@ class Usuario implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[ORM\Column]
     private ?bool $activo = null;
+
+    #[ORM\OneToMany(mappedBy: 'idCliente', targetEntity: Asesoria::class)]
+    private Collection $asesorias;
+
+    public function __construct()
+    {
+        $this->asesorias = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -153,6 +163,36 @@ class Usuario implements UserInterface, PasswordAuthenticatedUserInterface
     public function setActivo(bool $activo): static
     {
         $this->activo = $activo;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Asesoria>
+     */
+    public function getAsesorias(): Collection
+    {
+        return $this->asesorias;
+    }
+
+    public function addAsesoria(Asesoria $asesoria): static
+    {
+        if (!$this->asesorias->contains($asesoria)) {
+            $this->asesorias->add($asesoria);
+            $asesoria->setIdCliente($this);
+        }
+
+        return $this;
+    }
+
+    public function removeAsesoria(Asesoria $asesoria): static
+    {
+        if ($this->asesorias->removeElement($asesoria)) {
+            // set the owning side to null (unless already changed)
+            if ($asesoria->getIdCliente() === $this) {
+                $asesoria->setIdCliente(null);
+            }
+        }
 
         return $this;
     }
