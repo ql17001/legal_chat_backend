@@ -55,4 +55,45 @@ class AsesoriaController extends AbstractController
             $generadorDeMensajes->generarRespuesta("Se ha solicitado la asesoría.", $data)
         ]);
     }
+
+    #[Route('/sin-asesor/{page}', name: 'app_read_all_asesorias_sin_asesor', methods: ['GET'])]
+    public function readAll(EntityManagerInterface $entityManager, int $page, Request $request, GeneradorDeMensajes $generadorDeMensajes): JsonResponse
+    {
+        $repositorio = $entityManager->getRepository(Asesoria::class);
+
+        $limit = $request->get('limit',20);
+
+        $asesorias = $repositorio->findAllWithPagination($page,$limit);
+
+        $total = $asesorias->count();
+
+        $lastPage = (int) ceil($total/$limit);
+
+        $data = [];
+    
+        foreach ($asesorias as $asesoria) {
+
+            $usuarioid = ['id' => $asesoria->getIdCliente()];
+            $usuario = $entityManager->getRepository(Usuario::class)->find($usuarioid['id']);
+            $usuario_array = [
+                'nombre' => $usuario->getNombre(),
+                'apellido' => $usuario->getApellido(),
+            ];
+
+            $asesor = $asesoria->getIdAsesor();
+
+            if($asesor == null){
+                $data[] = [
+                    'id' => $asesoria->getId(),
+                    'nombre' => $asesoria->getNombre(),
+                    'estado' => $asesoria->getEstado(),
+                    'fecha' => $asesoria->getFecha(),
+                    'cliente' => $usuario_array
+                    
+                ];
+            }               
+        }
+      
+        return $this->json([$generadorDeMensajes->generarRespuesta("Estas son todas las asesorias sin asesores: ", $data), 'total'=> $total, 'lastPage'=> $lastPage]); 
+    }
 }
