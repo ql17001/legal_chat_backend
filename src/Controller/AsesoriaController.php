@@ -56,12 +56,14 @@ class AsesoriaController extends AbstractController
         ]);
     }
 
-    #[Route('/sin-asesor/{page}', name: 'app_read_all_asesorias_sin_asesor', methods: ['GET'])]
-    public function readAll(EntityManagerInterface $entityManager, int $page, Request $request, GeneradorDeMensajes $generadorDeMensajes): JsonResponse
+    #[Route('/sin-asesor', name: 'app_read_all_asesorias_sin_asesor', methods: ['GET'])]
+    public function readAll(EntityManagerInterface $entityManager, Request $request, GeneradorDeMensajes $generadorDeMensajes): JsonResponse
     {
         $repositorio = $entityManager->getRepository(Asesoria::class);
 
-        $limit = $request->get('limit',20);
+        $limit = 20;
+
+        $page = $request->get('page', 1);
 
         $asesorias = $repositorio->findAllWithPagination($page,$limit);
 
@@ -94,6 +96,11 @@ class AsesoriaController extends AbstractController
             }               
         }
       
-        return $this->json([$generadorDeMensajes->generarRespuesta("Estas son todas las asesorias sin asesores: ", $data), 'total'=> $total, 'lastPage'=> $lastPage]); 
+        return $this->json([
+            $generadorDeMensajes->generarRespuesta("Estas son todas las asesorias sin asesores: ", $data), 
+            'total'=> $total, 
+            'lastPage'=> $lastPage,
+            'page' => $page,
+        ]); 
     }
 }
