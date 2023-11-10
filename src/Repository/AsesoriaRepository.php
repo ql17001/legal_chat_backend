@@ -26,9 +26,10 @@ class AsesoriaRepository extends ServiceEntityRepository
     public function findAllWithPagination(int $currentPage, int $limit): Paginator
     {
         
-        $query = $this->createQueryBuilder('p')
-        ->getQuery();
+        $queryBuilder = $this->createQueryBuilder('a')
+        ->andWhere('a.idAsesor is null');
 
+        $query = $queryBuilder->getQuery();
         $paginator = Functions::paginate($query, $currentPage, $limit);
 
         return $paginator;

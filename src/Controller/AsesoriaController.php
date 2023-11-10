@@ -69,7 +69,7 @@ class AsesoriaController extends AbstractController
 
         $total = $asesorias->count();
 
-        $lastPage = (int) ceil($total/$limit);
+        $totalPages = (int) ceil($total/$limit);
 
         $data = [];
     
@@ -81,26 +81,22 @@ class AsesoriaController extends AbstractController
                 'nombre' => $usuario->getNombre(),
                 'apellido' => $usuario->getApellido(),
             ];
-
-            $asesor = $asesoria->getIdAsesor();
-
-            if($asesor == null){
-                $data[] = [
-                    'id' => $asesoria->getId(),
-                    'nombre' => $asesoria->getNombre(),
-                    'estado' => $asesoria->getEstado(),
-                    'fecha' => $asesoria->getFecha(),
-                    'cliente' => $usuario_array
+            
+            $data[] = [
+                'id' => $asesoria->getId(),
+                'nombre' => $asesoria->getNombre(),
+                'estado' => $asesoria->getEstado(),
+                'fecha' => $asesoria->getFecha(),
+                'cliente' => $usuario_array
                     
-                ];
-            }               
+            ];
+                          
         }
       
         return $this->json([
             $generadorDeMensajes->generarRespuesta("Estas son todas las asesorias sin asesores: ", $data), 
             'total'=> $total, 
-            'lastPage'=> $lastPage,
-            'page' => $page,
+            'totalPages'=> $totalPages
         ]); 
     }
 }
