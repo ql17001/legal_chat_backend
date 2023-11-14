@@ -34,6 +34,26 @@ class AsesoriaRepository extends ServiceEntityRepository
         return $paginator;
     }
 
+    public function findAllByUserWithPagination(int $currentPage, int $idUsuario): Paginator
+    {
+      // Creamos nuestra query
+      $queryBuilder = $this->createQueryBuilder('p');
+
+      // Equivale a agregar despues del WHERE: AND id_asesor_id = $idUsuario
+      $queryBuilder = $queryBuilder->andWhere('p.idAsesor = '.$idUsuario);
+
+      // Equivale a agregar despues del condicional anterior: OR id_cliente_id = $idUsuario
+      $queryBuilder = $queryBuilder->orWhere('p.idCliente = '.$idUsuario);
+      
+
+      $query = $queryBuilder->getQuery();
+
+      // Creamos un paginator con la funcion paginate
+      $paginator = Functions::paginate($query, $currentPage, 20);
+
+      return $paginator;
+    }
+
 //    /**
 //     * @return Asesoria[] Returns an array of Asesoria objects
 //     */
