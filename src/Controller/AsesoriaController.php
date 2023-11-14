@@ -18,9 +18,9 @@ use Symfony\Component\HttpFoundation\Request;
 class AsesoriaController extends AbstractController
 {
     #[Route('/{filtro}', name: 'app_read_all_asesorias', methods: ['GET'])]
-    public function read(EntityManagerInterface $entityManager, Request $request, GeneradorDeMensajes $generadorDeMensajes, string $filtro): JsonResponse
+    public function read(EntityManagerInterface $entityManager, Request $request, GeneradorDeMensajes $generadorDeMensajes, string $filtro = null): JsonResponse
     {
-        if ($filtro == "all" ||  $filtro == "s" || $filtro == "t" ||  $filtro == "e") {
+        if ($filtro == "all" ||  $filtro == "s" || $filtro == "t" ||  $filtro == "e" || $filtro == null) {
             $repositorio = $entityManager->getRepository(Asesoria::class);
 
             $limit = 20;
@@ -35,7 +35,7 @@ class AsesoriaController extends AbstractController
 
             $data = [];
 
-            if ($filtro == "all") {
+            if ($filtro == "all" || $filtro == null) {
                 foreach ($asesorias as $asesoria) {
 
                     $usuarioid = ['id' => $asesoria->getIdCliente()];
@@ -71,6 +71,12 @@ class AsesoriaController extends AbstractController
                         ];
                     }
                 }
+                return $this->json([
+                    $generadorDeMensajes->generarRespuesta("Estas son todas las asesorias: ", $data),
+                    'total' => $total,
+                    'lastPage' => $lastPage,
+                    'page' => $page,
+                ]);
             } else {
                 if ($filtro == "s") {
                     foreach ($asesorias as $asesoria) {
@@ -95,6 +101,12 @@ class AsesoriaController extends AbstractController
                             ];
                         }
                     }
+                    return $this->json([
+                        $generadorDeMensajes->generarRespuesta("Estas son todas las asesorias sin asesor: ", $data),
+                        'total' => $total,
+                        'lastPage' => $lastPage,
+                        'page' => $page,
+                    ]);
                 } else if ($filtro == "t") {
                     foreach ($asesorias as $asesoria) {
 
@@ -135,7 +147,13 @@ class AsesoriaController extends AbstractController
                             }
                         }
                     }
-                }else if ($filtro == "e") {
+                    return $this->json([
+                        $generadorDeMensajes->generarRespuesta("Estas son todas las asesorias terminadas: ", $data),
+                        'total' => $total,
+                        'lastPage' => $lastPage,
+                        'page' => $page,
+                    ]);
+                } else if ($filtro == "e") {
                     foreach ($asesorias as $asesoria) {
 
                         $usuarioid = ['id' => $asesoria->getIdCliente()];
@@ -175,14 +193,14 @@ class AsesoriaController extends AbstractController
                             }
                         }
                     }
+                    return $this->json([
+                        $generadorDeMensajes->generarRespuesta("Estas son todas las asesorias en proceso: ", $data),
+                        'total' => $total,
+                        'lastPage' => $lastPage,
+                        'page' => $page,
+                    ]);
                 }
             }
-            return $this->json([
-                $generadorDeMensajes->generarRespuesta("Estas son todas las asesorias sin asesores: ", $data),
-                'total' => $total,
-                'lastPage' => $lastPage,
-                'page' => $page,
-            ]);
         } else {
             return $this->json(([$generadorDeMensajes->generarRespuesta("error 404 pagina no encontrada")]));
         }
