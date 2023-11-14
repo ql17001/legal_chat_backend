@@ -35,8 +35,8 @@ class Usuario implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 100)]
     private ?string $apellido = null;
 
-    #[ORM\Column(length: 8)]
-    private ?string $dui = null;
+    #[ORM\Column(length: 9)]
+    private ?int $dui = null;
 
     #[ORM\Column]
     private ?bool $activo = null;
