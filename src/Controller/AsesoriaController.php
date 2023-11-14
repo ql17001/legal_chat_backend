@@ -57,7 +57,7 @@ class AsesoriaController extends AbstractController
     }
 
     #[Route('/sin-asesor', name: 'app_read_all_asesorias_sin_asesor', methods: ['GET'])]
-    public function readAll(EntityManagerInterface $entityManager, Request $request, GeneradorDeMensajes $generadorDeMensajes): JsonResponse
+    public function readAllWithoutAsesor(EntityManagerInterface $entityManager, Request $request, GeneradorDeMensajes $generadorDeMensajes): JsonResponse
     {
         $repositorio = $entityManager->getRepository(Asesoria::class);
 
