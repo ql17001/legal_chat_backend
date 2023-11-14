@@ -23,15 +23,20 @@ class AsesoriaRepository extends ServiceEntityRepository
         parent::__construct($registry, Asesoria::class);
     }
 
-    public function findAllWithPagination(int $currentPage, int $limit): Paginator
+    public function findAllWithPagination(int $currentPage, int $limit, string $filtro = null): Paginator
     {
-        
-        $query = $this->createQueryBuilder('p')
-        ->getQuery();
+        $queryBuilder = $this->createQueryBuilder('p');
 
-        $paginator = Functions::paginate($query, $currentPage, $limit);
+        if ($filtro !== null) {
+            if ($filtro === 's' || $filtro === 't' || $filtro === 'e') {
+                $queryBuilder->andWhere('p.estado = :filtro')
+                    ->setParameter('filtro', $filtro);
+            }
+            // Añadir más condiciones según sea necesario
+        }
 
-        return $paginator;
+        $query = $queryBuilder->getQuery();
+        return Functions::paginate($query, $currentPage, $limit);
     }
 
     public function findAllByUserWithPagination(int $currentPage, int $idUsuario): Paginator
