@@ -133,7 +133,7 @@ class AsesoriaController extends AbstractController
     }
 
     #[Route('/sin-asesor', name: 'app_read_all_asesorias_sin_asesor', methods: ['GET'])]
-    public function readAll(EntityManagerInterface $entityManager, Request $request, GeneradorDeMensajes $generadorDeMensajes): JsonResponse
+    public function readAllWithoutAsesor(EntityManagerInterface $entityManager, Request $request, GeneradorDeMensajes $generadorDeMensajes): JsonResponse
     {
         $repositorio = $entityManager->getRepository(Asesoria::class);
 
@@ -141,11 +141,11 @@ class AsesoriaController extends AbstractController
 
         $page = $request->get('page', 1);
 
-        $asesorias = $repositorio->findAllWithPagination($page, $limit);
+        $asesorias = $repositorio->findAllWithoutAsesorWithPagination($page, $limit);
 
         $total = $asesorias->count();
 
-        $lastPage = (int) ceil($total / $limit);
+        $totalPages = (int) ceil($total/$limit);
 
         $data = [];
 
@@ -157,25 +157,22 @@ class AsesoriaController extends AbstractController
                 'nombre' => $usuario->getNombre(),
                 'apellido' => $usuario->getApellido(),
             ];
-
-            $asesor = $asesoria->getIdAsesor();
-
-            if ($asesor == null) {
-                $data[] = [
-                    'id' => $asesoria->getId(),
-                    'nombre' => $asesoria->getNombre(),
-                    'estado' => $asesoria->getEstado(),
-                    'fecha' => $asesoria->getFecha(),
-                    'cliente' => $usuario_array
-                ];
-            }
+            
+            $data[] = [
+                'id' => $asesoria->getId(),
+                'nombre' => $asesoria->getNombre(),
+                'estado' => $asesoria->getEstado(),
+                'fecha' => $asesoria->getFecha(),
+                'cliente' => $usuario_array
+                    
+            ];
+           
         }
 
         return $this->json([
-            $generadorDeMensajes->generarRespuesta("Estas son todas las asesorias sin asesores: ", $data),
-            'total' => $total,
-            'lastPage' => $lastPage,
-            'page' => $page,
+            $generadorDeMensajes->generarRespuesta("Estas son todas las asesorias sin asesores: ", $data), 
+            'total'=> $total, 
+            'totalPages'=> $totalPages
         ]);
     }
     #[Route('/terminar/{id}', name: 'app_asesoria_update', methods: ['PUT'])]

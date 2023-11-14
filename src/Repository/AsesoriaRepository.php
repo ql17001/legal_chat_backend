@@ -23,6 +23,18 @@ class AsesoriaRepository extends ServiceEntityRepository
         parent::__construct($registry, Asesoria::class);
     }
 
+    public function findAllWithoutAsesorWithPagination(int $currentPage, int $limit): Paginator
+    {
+        
+        $queryBuilder = $this->createQueryBuilder('a')
+        ->andWhere('a.idAsesor is null');
+
+        $query = $queryBuilder->getQuery();
+        $paginator = Functions::paginate($query, $currentPage, $limit);
+        $query = $queryBuilder->getQuery();
+        return Functions::paginate($query, $currentPage, $limit);
+    }
+  
     public function findAllWithPagination(int $currentPage, int $limit, string $filtro = null): Paginator
     {
         $queryBuilder = $this->createQueryBuilder('p');
