@@ -17,195 +17,78 @@ use Symfony\Component\HttpFoundation\Request;
 #[Route('/asesorias', name: 'app_asesoria')]
 class AsesoriaController extends AbstractController
 {
-    #[Route('/{filtro}', name: 'app_read_all_asesorias', methods: ['GET'])]
-    public function read(EntityManagerInterface $entityManager, Request $request, GeneradorDeMensajes $generadorDeMensajes, string $filtro = null): JsonResponse
+    #[Route('', name: 'app_read_all_asesorias', methods: ['GET'])]
+    public function read(EntityManagerInterface $entityManager, Request $request, GeneradorDeMensajes $generadorDeMensajes): JsonResponse
     {
-        if ($filtro == "all" ||  $filtro == "s" || $filtro == "t" ||  $filtro == "e" || $filtro == null) {
-            $repositorio = $entityManager->getRepository(Asesoria::class);
+        $limit = 20;
 
-            $limit = 20;
+        $page = $request->get('page', 1);
 
-            $page = $request->get('page', 1);
-
-            $asesorias = $repositorio->findAllWithPagination($page, $limit);
-
-            $total = $asesorias->count();
-
-            $lastPage = (int) ceil($total / $limit);
-
-            $data = [];
-
-            if ($filtro == "all" || $filtro == null) {
-                foreach ($asesorias as $asesoria) {
-
-                    $usuarioid = ['id' => $asesoria->getIdCliente()];
-                    $usuario = $entityManager->getRepository(Usuario::class)->find($usuarioid['id']);
-                    $usuario_array = [
-                        'nombre' => $usuario->getNombre(),
-                        'apellido' => $usuario->getApellido(),
-                    ];
-
-                    $asesor = ['id' => $asesoria->getIdAsesor()];
-                    $asesor = $entityManager->getRepository(Usuario::class)->find($usuarioid['id']);
-                    $asesor_array = [
-                        'nombre' => $asesor->getNombre(),
-                        'apellido' => $asesor->getApellido(),
-                    ];
-
-                    if ($asesor == null) {
-                        $data[] = [
-                            'id' => $asesoria->getId(),
-                            'nombreAsesoria' => $asesoria->getNombre(),
-                            'estado' => $asesoria->getEstado(),
-                            'fecha' => $asesoria->getFecha(),
-                            'cliente' => $usuario_array
-                        ];
-                    } else {
-                        $data[] = [
-                            'id' => $asesoria->getId(),
-                            'nombreAsesoria' => $asesoria->getNombre(),
-                            'estado' => $asesoria->getEstado(),
-                            'fecha' => $asesoria->getFecha(),
-                            'cliente' => $usuario_array,
-                            'asesor' => $asesor_array
-                        ];
-                    }
-                }
-                return $this->json([
-                    $generadorDeMensajes->generarRespuesta("Estas son todas las asesorias: ", $data),
-                    'total' => $total,
-                    'lastPage' => $lastPage,
-                    'page' => $page,
-                ]);
-            } else {
-                if ($filtro == "s") {
-                    foreach ($asesorias as $asesoria) {
-
-                        $usuarioid = ['id' => $asesoria->getIdCliente()];
-                        $usuario = $entityManager->getRepository(Usuario::class)->find($usuarioid['id']);
-                        $usuario_array = [
-                            'nombre' => $usuario->getNombre(),
-                            'apellido' => $usuario->getApellido(),
-                        ];
-
-                        $asesor = $asesoria->getIdAsesor();
-
-                        if ($asesor == null) {
-                            $data[] = [
-                                'id' => $asesoria->getId(),
-                                'nombre' => $asesoria->getNombre(),
-                                'estado' => $asesoria->getEstado(),
-                                'fecha' => $asesoria->getFecha(),
-                                'cliente' => $usuario_array
-
-                            ];
-                        }
-                    }
-                    return $this->json([
-                        $generadorDeMensajes->generarRespuesta("Estas son todas las asesorias sin asesor: ", $data),
-                        'total' => $total,
-                        'lastPage' => $lastPage,
-                        'page' => $page,
-                    ]);
-                } else if ($filtro == "t") {
-                    foreach ($asesorias as $asesoria) {
-
-                        $usuarioid = ['id' => $asesoria->getIdCliente()];
-                        $usuario = $entityManager->getRepository(Usuario::class)->find($usuarioid['id']);
-                        $usuario_array = [
-                            'nombre' => $usuario->getNombre(),
-                            'apellido' => $usuario->getApellido(),
-                        ];
-
-                        $asesor = ['id' => $asesoria->getIdAsesor()];
-                        $asesor = $entityManager->getRepository(Usuario::class)->find($usuarioid['id']);
-                        $asesor_array = [
-                            'nombre' => $asesor->getNombre(),
-                            'apellido' => $asesor->getApellido(),
-                        ];
-
-                        $estado = $asesoria->getEstado();
-
-                        if ($estado == "terminado") {
-                            if ($asesor == null) {
-                                $data[] = [
-                                    'id' => $asesoria->getId(),
-                                    'nombreAsesoria' => $asesoria->getNombre(),
-                                    'estado' => $asesoria->getEstado(),
-                                    'fecha' => $asesoria->getFecha(),
-                                    'cliente' => $usuario_array
-                                ];
-                            } else {
-                                $data[] = [
-                                    'id' => $asesoria->getId(),
-                                    'nombreAsesoria' => $asesoria->getNombre(),
-                                    'estado' => $asesoria->getEstado(),
-                                    'fecha' => $asesoria->getFecha(),
-                                    'cliente' => $usuario_array,
-                                    'asesor' => $asesor_array
-                                ];
-                            }
-                        }
-                    }
-                    return $this->json([
-                        $generadorDeMensajes->generarRespuesta("Estas son todas las asesorias terminadas: ", $data),
-                        'total' => $total,
-                        'lastPage' => $lastPage,
-                        'page' => $page,
-                    ]);
-                } else if ($filtro == "e") {
-                    foreach ($asesorias as $asesoria) {
-
-                        $usuarioid = ['id' => $asesoria->getIdCliente()];
-                        $usuario = $entityManager->getRepository(Usuario::class)->find($usuarioid['id']);
-                        $usuario_array = [
-                            'nombre' => $usuario->getNombre(),
-                            'apellido' => $usuario->getApellido(),
-                        ];
-
-                        $asesor = ['id' => $asesoria->getIdAsesor()];
-                        $asesor = $entityManager->getRepository(Usuario::class)->find($usuarioid['id']);
-                        $asesor_array = [
-                            'nombre' => $asesor->getNombre(),
-                            'apellido' => $asesor->getApellido(),
-                        ];
-
-                        $estado = $asesoria->getEstado();
-
-                        if ($estado == "en proceso") {
-                            if ($asesor == null) {
-                                $data[] = [
-                                    'id' => $asesoria->getId(),
-                                    'nombreAsesoria' => $asesoria->getNombre(),
-                                    'estado' => $asesoria->getEstado(),
-                                    'fecha' => $asesoria->getFecha(),
-                                    'cliente' => $usuario_array
-                                ];
-                            } else {
-                                $data[] = [
-                                    'id' => $asesoria->getId(),
-                                    'nombreAsesoria' => $asesoria->getNombre(),
-                                    'estado' => $asesoria->getEstado(),
-                                    'fecha' => $asesoria->getFecha(),
-                                    'cliente' => $usuario_array,
-                                    'asesor' => $asesor_array
-                                ];
-                            }
-                        }
-                    }
-                    return $this->json([
-                        $generadorDeMensajes->generarRespuesta("Estas son todas las asesorias en proceso: ", $data),
-                        'total' => $total,
-                        'lastPage' => $lastPage,
-                        'page' => $page,
-                    ]);
-                }
-            }
-        } else {
-            return $this->json(([$generadorDeMensajes->generarRespuesta("error 404 pagina no encontrada")]));
+        $filtro = $request->get('filtro', null);
+        if ($filtro === 'ALL') {
+            $filtro = null;
         }
+        $asesorias = $entityManager->getRepository(Asesoria::class)->findAllWithPagination($page, $limit, $filtro);
+
+        $total = $asesorias->count();
+
+        $lastPage = (int) ceil($total / $limit);
+
+        $data = [];
+
+        foreach ($asesorias as $asesoria) {
+
+            $usuarioid = ['id' => $asesoria->getIdCliente()];
+            $usuario = $entityManager->getRepository(Usuario::class)->find($usuarioid['id']);
+            $usuario_array = [
+                'nombre' => $usuario->getNombre(),
+                'apellido' => $usuario->getApellido(),
+            ];
+
+            $asesor = $asesoria->getIdAsesor();
+
+            if ($asesor == null) {
+                $data[] = [
+                    'id' => $asesoria->getId(),
+                    'nombre' => $asesoria->getNombre(),
+                    'estado' => $asesoria->getEstado(),
+                    'fecha' => $asesoria->getFecha(),
+                    'cliente' => $usuario_array
+                ];
+            } else {
+                $asesor = $entityManager->getRepository(Usuario::class)->find($asesor);
+                $asesor_array = ['nombre' => $asesor->getNombre(), 'apellido' => $asesor->getApellido()];
+                $data[] = [
+                    'id' => $asesoria->getId(),
+                    'nombreAsesoria' => $asesoria->getNombre(),
+                    'estado' => $asesoria->getEstado(),
+                    'fecha' => $asesoria->getFecha(),
+                    'cliente' => $usuario_array,
+                    'asesor' => $asesor_array
+                ];
+            }
+        }
+        $mensajeFiltro = $this->getMensajeFiltro($filtro);
+        return $this->json([$generadorDeMensajes->generarRespuesta($mensajeFiltro, $data),
+            'total' => $total,
+            'lastPage' => $lastPage,
+            'page' => $page,
+        ]);
     }
 
+    private function getMensajeFiltro($filtro): string
+    {
+        switch ($filtro) {
+            case 's':
+                return "Asesorías sin asesor:";
+            case 't':
+                return "Asesorías terminadas:";
+            case 'e':
+                return "Asesorías en proceso:";
+            default:
+                return "Todas las asesorías:";
+        }
+    }
 
     #[Route('/solicitar', name: 'app_asesoria_create', methods: ['POST'])]
     public function create(EntityManagerInterface $entityManager, Request $request, Security $security, GeneradorDeMensajes $generadorDeMensajes): JsonResponse
@@ -282,7 +165,6 @@ class AsesoriaController extends AbstractController
                     'estado' => $asesoria->getEstado(),
                     'fecha' => $asesoria->getFecha(),
                     'cliente' => $usuario_array
-
                 ];
             }
         }

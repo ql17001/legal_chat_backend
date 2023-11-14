@@ -23,39 +23,45 @@ class AsesoriaRepository extends ServiceEntityRepository
         parent::__construct($registry, Asesoria::class);
     }
 
-    public function findAllWithPagination(int $currentPage, int $limit): Paginator
-    {
-        
-        $query = $this->createQueryBuilder('p')
-        ->getQuery();
+    public function findAllWithPagination(int $currentPage, int $limit, string $filtro = null): Paginator
+{
+    $queryBuilder = $this->createQueryBuilder('p');
 
-        $paginator = Functions::paginate($query, $currentPage, $limit);
-
-        return $paginator;
+    if ($filtro !== null) {
+        if ($filtro === 's' || $filtro === 't' || $filtro === 'e') {
+            $queryBuilder->andWhere('p.estado = :filtro')
+                ->setParameter('filtro', $filtro);
+        }
+        // Añadir más condiciones según sea necesario
     }
 
-//    /**
-//     * @return Asesoria[] Returns an array of Asesoria objects
-//     */
-//    public function findByExampleField($value): array
-//    {
-//        return $this->createQueryBuilder('a')
-//            ->andWhere('a.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->orderBy('a.id', 'ASC')
-//            ->setMaxResults(10)
-//            ->getQuery()
-//            ->getResult()
-//        ;
-//    }
+    $query = $queryBuilder->getQuery();
+    return Functions::paginate($query, $currentPage, $limit);
+}
 
-//    public function findOneBySomeField($value): ?Asesoria
-//    {
-//        return $this->createQueryBuilder('a')
-//            ->andWhere('a.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->getQuery()
-//            ->getOneOrNullResult()
-//        ;
-//    }
+
+    //    /**
+    //     * @return Asesoria[] Returns an array of Asesoria objects
+    //     */
+    //    public function findByExampleField($value): array
+    //    {
+    //        return $this->createQueryBuilder('a')
+    //            ->andWhere('a.exampleField = :val')
+    //            ->setParameter('val', $value)
+    //            ->orderBy('a.id', 'ASC')
+    //            ->setMaxResults(10)
+    //            ->getQuery()
+    //            ->getResult()
+    //        ;
+    //    }
+
+    //    public function findOneBySomeField($value): ?Asesoria
+    //    {
+    //        return $this->createQueryBuilder('a')
+    //            ->andWhere('a.exampleField = :val')
+    //            ->setParameter('val', $value)
+    //            ->getQuery()
+    //            ->getOneOrNullResult()
+    //        ;
+    //    }
 }
