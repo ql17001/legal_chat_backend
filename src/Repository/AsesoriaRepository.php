@@ -24,20 +24,20 @@ class AsesoriaRepository extends ServiceEntityRepository
     }
 
     public function findAllWithPagination(int $currentPage, int $limit, string $filtro = null): Paginator
-{
-    $queryBuilder = $this->createQueryBuilder('p');
+    {
+        $queryBuilder = $this->createQueryBuilder('p');
 
-    if ($filtro !== null) {
-        if ($filtro === 's' || $filtro === 't' || $filtro === 'e') {
-            $queryBuilder->andWhere('p.estado = :filtro')
-                ->setParameter('filtro', $filtro);
+        if ($filtro !== null) {
+            if ($filtro === 's' || $filtro === 't' || $filtro === 'e') {
+                $queryBuilder->andWhere('p.estado = :filtro')
+                    ->setParameter('filtro', $filtro);
+            }
+            // Añadir más condiciones según sea necesario
         }
-        // Añadir más condiciones según sea necesario
-    }
 
-    $query = $queryBuilder->getQuery();
-    return Functions::paginate($query, $currentPage, $limit);
-}
+        $query = $queryBuilder->getQuery();
+        return Functions::paginate($query, $currentPage, $limit);
+    }
 
 
     //    /**

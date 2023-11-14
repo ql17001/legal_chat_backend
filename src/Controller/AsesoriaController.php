@@ -18,6 +18,7 @@ use App\Controller\UserPasswordHasherInterface;
 #[Route('/asesorias', name: 'app_asesoria')]
 class AsesoriaController extends AbstractController
 {
+    
     #[Route('', name: 'app_read_all_asesorias', methods: ['GET'])]
     public function read(EntityManagerInterface $entityManager, Request $request, GeneradorDeMensajes $generadorDeMensajes): JsonResponse
     {
