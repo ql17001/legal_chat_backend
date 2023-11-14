@@ -39,29 +39,48 @@ class AsesoriaRepository extends ServiceEntityRepository
         return Functions::paginate($query, $currentPage, $limit);
     }
 
+    public function findAllByUserWithPagination(int $currentPage, int $idUsuario): Paginator
+    {
+      // Creamos nuestra query
+      $queryBuilder = $this->createQueryBuilder('p');
 
-    //    /**
-    //     * @return Asesoria[] Returns an array of Asesoria objects
-    //     */
-    //    public function findByExampleField($value): array
-    //    {
-    //        return $this->createQueryBuilder('a')
-    //            ->andWhere('a.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->orderBy('a.id', 'ASC')
-    //            ->setMaxResults(10)
-    //            ->getQuery()
-    //            ->getResult()
-    //        ;
-    //    }
+      // Equivale a agregar despues del WHERE: AND id_asesor_id = $idUsuario
+      $queryBuilder = $queryBuilder->andWhere('p.idAsesor = '.$idUsuario);
 
-    //    public function findOneBySomeField($value): ?Asesoria
-    //    {
-    //        return $this->createQueryBuilder('a')
-    //            ->andWhere('a.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->getQuery()
-    //            ->getOneOrNullResult()
-    //        ;
-    //    }
+      // Equivale a agregar despues del condicional anterior: OR id_cliente_id = $idUsuario
+      $queryBuilder = $queryBuilder->orWhere('p.idCliente = '.$idUsuario);
+      
+
+      $query = $queryBuilder->getQuery();
+
+      // Creamos un paginator con la funcion paginate
+      $paginator = Functions::paginate($query, $currentPage, 20);
+
+      return $paginator;
+    }
+
+//    /**
+//     * @return Asesoria[] Returns an array of Asesoria objects
+//     */
+//    public function findByExampleField($value): array
+//    {
+//        return $this->createQueryBuilder('a')
+//            ->andWhere('a.exampleField = :val')
+//            ->setParameter('val', $value)
+//            ->orderBy('a.id', 'ASC')
+//            ->setMaxResults(10)
+//            ->getQuery()
+//            ->getResult()
+//        ;
+//    }
+
+//    public function findOneBySomeField($value): ?Asesoria
+//    {
+//        return $this->createQueryBuilder('a')
+//            ->andWhere('a.exampleField = :val')
+//            ->setParameter('val', $value)
+//            ->getQuery()
+//            ->getOneOrNullResult()
+//        ;
+//    }
 }

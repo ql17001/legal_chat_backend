@@ -24,6 +24,10 @@ class Message
     #[ORM\JoinColumn(nullable: false)]
     private ?Chat $idChat = null;
 
+    #[ORM\ManyToOne(inversedBy: 'messages')]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?Usuario $usuario = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -61,6 +65,18 @@ class Message
     public function setIdChat(?Chat $idChat): static
     {
         $this->idChat = $idChat;
+
+        return $this;
+    }
+
+    public function getUsuario(): ?Usuario
+    {
+        return $this->usuario;
+    }
+
+    public function setUsuario(?Usuario $usuario): static
+    {
+        $this->usuario = $usuario;
 
         return $this;
     }
