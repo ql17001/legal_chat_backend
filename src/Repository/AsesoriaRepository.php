@@ -31,8 +31,44 @@ class AsesoriaRepository extends ServiceEntityRepository
 
         $query = $queryBuilder->getQuery();
         $paginator = Functions::paginate($query, $currentPage, $limit);
+        $query = $queryBuilder->getQuery();
+        return Functions::paginate($query, $currentPage, $limit);
+    }
+  
+    public function findAllWithPagination(int $currentPage, int $limit, string $filtro = null): Paginator
+    {
+        $queryBuilder = $this->createQueryBuilder('p');
 
-        return $paginator;
+        if ($filtro !== null) {
+            if ($filtro === 's' || $filtro === 't' || $filtro === 'e') {
+                $queryBuilder->andWhere('p.estado = :filtro')
+                    ->setParameter('filtro', $filtro);
+            }
+            // Añadir más condiciones según sea necesario
+        }
+
+        $query = $queryBuilder->getQuery();
+        return Functions::paginate($query, $currentPage, $limit);
+    }
+
+    public function findAllByUserWithPagination(int $currentPage, int $idUsuario): Paginator
+    {
+      // Creamos nuestra query
+      $queryBuilder = $this->createQueryBuilder('p');
+
+      // Equivale a agregar despues del WHERE: AND id_asesor_id = $idUsuario
+      $queryBuilder = $queryBuilder->andWhere('p.idAsesor = '.$idUsuario);
+
+      // Equivale a agregar despues del condicional anterior: OR id_cliente_id = $idUsuario
+      $queryBuilder = $queryBuilder->orWhere('p.idCliente = '.$idUsuario);
+      
+
+      $query = $queryBuilder->getQuery();
+
+      // Creamos un paginator con la funcion paginate
+      $paginator = Functions::paginate($query, $currentPage, 20);
+
+      return $paginator;
     }
 
 //    /**

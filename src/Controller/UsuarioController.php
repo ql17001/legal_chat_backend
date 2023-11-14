@@ -46,7 +46,7 @@ class UsuarioController extends AbstractController
     }
 
    #[Route('/perfil', name: 'app_usuario_real_read', methods: ['GET'])]
-    public function read(GeneradorDeMensajes $generadorDeMensajes, Security $security): JsonResponse
+    public function readProfile(GeneradorDeMensajes $generadorDeMensajes, Security $security): JsonResponse
   {
  // se obtiene los datos del usuario mediante el token
  $usuarioLogueado = $security->getUser();
@@ -217,6 +217,27 @@ class UsuarioController extends AbstractController
     $entityManager->flush();
 
     return $this->json($generadorDeMensajes->generarRespuesta("Se ha eliminado al usuario correctamente.", $data));
+  }
+
+  #[Route('/{id}', name: 'app_usuario_real_read_one', methods: ['GET'])]
+    public function read(EntityManagerInterface $entityManager, int $id, GeneradorDeMensajes $generadorDeMensajes): JsonResponse
+  {
+ // se obtiene los datos del usuario mediante el token
+ $usuario = $entityManager->getRepository(Usuario::class)->find($id);;
+ if($usuario !== null){
+   $usuario = [
+  'nombre' => $usuario->getNombre(),
+  'apellido' => $usuario->getApellido(),
+  'email' => $usuario->getEmail(),
+  'dui' => $usuario->getDui(),
+  'rol' => $usuario->getRoles()[0]
+  ];
+  return $this->json($generadorDeMensajes->generarRespuesta('Solicitud procesada con exito.', $usuario));
+    } 
+    else {
+      // Manejo del caso en el que no se cumple la condición
+      return $this->json($generadorDeMensajes->generarRespuesta('No se encontro el usuario.'), 404); // "No encontrado".
+    }
   }
 
   #[Route('/{id}', name: 'app_usuario_update', methods: ['PUT'])]
