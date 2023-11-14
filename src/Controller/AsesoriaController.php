@@ -65,7 +65,7 @@ class AsesoriaController extends AbstractController
 
         $page = $request->get('page', 1);
 
-        $asesorias = $repositorio->findAllWithPagination($page,$limit);
+        $asesorias = $repositorio->findAllWithoutAsesorWithPagination($page, $limit);
 
         $total = $asesorias->count();
 
