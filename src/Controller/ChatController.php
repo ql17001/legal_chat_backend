@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Asesoria;
+use App\Entity\Chat;
 use App\Entity\Usuario;
 use App\Service\GeneradorDeMensajes;
 use Doctrine\ORM\EntityManagerInterface;
@@ -54,6 +55,54 @@ class ChatController extends AbstractController
             'error' => 'No fue posible consultar los chats porque el usuario no fue encontrado o no es válido.',
         ];
         return $this->json($generadorDeMensajes->generarRespuesta($errorResponse), 404); // "No encontrado".
+      }
+    }
+
+    #[Route('/{id}', name: 'app_chat_read_one', methods: ['GET'])]
+    public function readOne(EntityManagerInterface $entityManager, int $id, GeneradorDeMensajes $generadorDeMensajes): JsonResponse
+    {
+      // se obtiene los datos del chat
+      $chat = $entityManager->getRepository(Chat::class)->find($id);
+
+      if($chat !== null){
+        // se obtiene los datos de la asesoria del chat
+        $asesoria = $entityManager->getRepository(Asesoria::class)->find($chat->getIdAsesoria());
+
+        $messages = [];
+
+        foreach($chat->getMessages() as $message) {
+          $messages[] = [
+            "fechaEnvio" => $message->getFechaEnvio(),
+            "contenido" => $message->getContenido(),
+            "usuario" => [
+              "nombre" => $message->getUsuario()->getNombre(),
+              "apellido" => $message->getUsuario()->getApellido()
+            ]
+          ];
+        }
+
+        $chatData = [
+          'asesoria' => [
+            "nombre" => $asesoria->getNombre(),
+            "estado" => $asesoria->getEstado(),
+            "fecha" => $asesoria->getFecha(),
+            "cliente" => [
+              "nombre" =>  $asesoria->getIdCliente()->getNombre(),
+              "apellido" => $asesoria->getIdCliente()->getApellido()
+            ]
+          ],
+          'chat' => [
+            "id" => $chat->getId(),
+            "fechaCreacion" => $chat->getFechaCreacion(),
+            "mensajes" => $messages
+          ]
+        ];
+
+        return $this->json($generadorDeMensajes->generarRespuesta('Solicitud procesada con exito.', $chatData));
+      } 
+      else {
+        // No se encuentra el chat con el id enviado
+        return $this->json($generadorDeMensajes->generarRespuesta('No se encontro el chat.'), 404); // "No encontrado".
       }
     }
 }
