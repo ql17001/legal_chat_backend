@@ -40,6 +40,10 @@ class ChatController extends AbstractController
           ];
 
           if($chat !== null){
+            $chatData = [
+              'idChat' => $chat->getId(),
+              'nombreAsesoria' => $asesoria->getNombre(),
+            ];
             $ultimoMensaje = $chat->getMessages()->last();
 
             if($ultimoMensaje !== null){
