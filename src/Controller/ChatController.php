@@ -46,7 +46,7 @@ class ChatController extends AbstractController
             ];
             $ultimoMensaje = $chat->getMessages()->last();
 
-            if($ultimoMensaje !== null){
+            if($ultimoMensaje){
               $ultimoMensajeData = [
                 'contenido' => $ultimoMensaje->getContenido(),
                 'fechaEnvio' => $ultimoMensaje->getFechaEnvio(),
@@ -58,6 +58,8 @@ class ChatController extends AbstractController
               
               $chatData['ultimoMensaje'] = $ultimoMensajeData;
             }
+          }else{
+            continue;
           }
 
           $chats[] = $chatData;
