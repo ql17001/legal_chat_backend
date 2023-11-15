@@ -7,6 +7,8 @@ use App\Entity\Chat;
 use App\Entity\Usuario;
 use App\Service\GeneradorDeMensajes;
 use Doctrine\ORM\EntityManagerInterface;
+use PhpParser\Node\Expr\Empty_;
+use stdClass;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -33,18 +35,28 @@ class ChatController extends AbstractController
         $chats = [];
         foreach ($asesoriasDelusuario as $asesoria) {
           $chat = $asesoria->getChat();
-          $ultimoMensaje = $chat->getMessages()->last();
-          $chats[] = [
+          $chatData = [
             'nombreAsesoria' => $asesoria->getNombre(),
-            'ultimoMensaje' => [
-              'contenido' => $ultimoMensaje->getContenido(),
-              'fechaEnvio' => $ultimoMensaje->getFechaEnvio(),
-              'usuario' => [
-                'nombre' => $ultimoMensaje->getUsuario()->getNombre(),
-                'apellido' => $ultimoMensaje->getUsuario()->getApellido()
-              ]
-            ]
           ];
+
+          if($chat !== null){
+            $ultimoMensaje = $chat->getMessages()->last();
+
+            if($ultimoMensaje !== null){
+              $ultimoMensajeData = [
+                'contenido' => $ultimoMensaje->getContenido(),
+                'fechaEnvio' => $ultimoMensaje->getFechaEnvio(),
+                'usuario' => [
+                  'nombre' => $ultimoMensaje->getUsuario()->getNombre(),
+                  'apellido' => $ultimoMensaje->getUsuario()->getApellido()
+                ]
+              ];
+              
+              $chatData['ultimoMensaje'] = $ultimoMensajeData;
+            }
+          }
+
+          $chats[] = $chatData;
         }
 
         return $this->json($generadorDeMensajes->generarRespuesta('Peticion procesada con exito.', $chats));
