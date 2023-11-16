@@ -30,42 +30,41 @@ class ChatController extends AbstractController
       if($usuarioLogueado !== null && $usuarioLogueado instanceof Usuario){
         
         // Se obtienen las asesorias del usuario logueado en la pagina $page
-        $asesoriasDelusuario = $entityManager->getRepository(Asesoria::class)->findAllByUserWithPagination($page, $usuarioLogueado->getId());
+        $chats = $entityManager->getRepository(Chat::class)->findAllByUserWithPagination($page, $usuarioLogueado->getId());
 
-        $chats = [];
-        foreach ($asesoriasDelusuario as $asesoria) {
-          $chat = $asesoria->getChat();
+        $limit = 20;
+
+        $total = $chats->count();
+
+        $totalPages = (int) ceil($total/$limit);
+        
+        $chatsDatas = [];
+        foreach ($chats as $chat) {
           $chatData = [
-            'nombreAsesoria' => $asesoria->getNombre(),
+            'nombreAsesoria' => $chat->getIdAsesoria()->getNombre(),
+            'idChat' => $chat->getId(),
           ];
 
-          if($chat !== null){
-            $chatData = [
-              'idChat' => $chat->getId(),
-              'nombreAsesoria' => $asesoria->getNombre(),
+          $ultimoMensaje = $chat->getMessages()->last();
+
+          if($ultimoMensaje){
+            $ultimoMensajeData = [
+              'contenido' => $ultimoMensaje->getContenido(),
+              'fechaEnvio' => $ultimoMensaje->getFechaEnvio(),
+              'usuario' => [
+                'nombre' => $ultimoMensaje->getUsuario()->getNombre(),
+                'apellido' => $ultimoMensaje->getUsuario()->getApellido()
+              ]
             ];
-            $ultimoMensaje = $chat->getMessages()->last();
-
-            if($ultimoMensaje){
-              $ultimoMensajeData = [
-                'contenido' => $ultimoMensaje->getContenido(),
-                'fechaEnvio' => $ultimoMensaje->getFechaEnvio(),
-                'usuario' => [
-                  'nombre' => $ultimoMensaje->getUsuario()->getNombre(),
-                  'apellido' => $ultimoMensaje->getUsuario()->getApellido()
-                ]
-              ];
-              
-              $chatData['ultimoMensaje'] = $ultimoMensajeData;
-            }
-          }else{
-            continue;
+            
+            $chatData['ultimoMensaje'] = $ultimoMensajeData;
           }
+          
 
-          $chats[] = $chatData;
+          $chatsDatas[] = $chatData;
         }
 
-        return $this->json($generadorDeMensajes->generarRespuesta('Peticion procesada con exito.', $chats));
+        return $this->json($generadorDeMensajes->generarRespuesta('Peticion procesada con exito.', ['chats' => $chatsDatas, 'totalPages' => $totalPages]));
       } 
       else {
         // Manejo del caso en el que no se cumple la condición
