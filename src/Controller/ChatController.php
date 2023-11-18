@@ -4,8 +4,10 @@ namespace App\Controller;
 
 use App\Entity\Asesoria;
 use App\Entity\Chat;
+use App\Entity\Message;
 use App\Entity\Usuario;
 use App\Service\GeneradorDeMensajes;
+use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
 use PhpParser\Node\Expr\Empty_;
 use stdClass;
@@ -116,6 +118,38 @@ class ChatController extends AbstractController
         ];
 
         return $this->json($generadorDeMensajes->generarRespuesta('Solicitud procesada con exito.', $chatData));
+      } 
+      else {
+        // No se encuentra el chat con el id enviado
+        return $this->json($generadorDeMensajes->generarRespuesta('No se encontro el chat.'), 404); // "No encontrado".
+      }
+    }
+
+    #[Route('/{id}', name: 'app_chat_add_message', methods: ['PUT'])]
+    public function addMessage(EntityManagerInterface $entityManager, int $id, GeneradorDeMensajes $generadorDeMensajes, Request $request, Security $security): JsonResponse
+    {
+      // se obtiene los datos del chat
+      $chat = $entityManager->getRepository(Chat::class)->find($id);
+
+      // se obtiene los datos del usuario mediante el token
+      $usuarioLogueado = $security->getUser();
+
+      // se obtiene el nombre del body de la peticion
+      $contenido = $request->request->get('contenido');
+
+      if($chat !== null){
+        $newMessage = new Message();
+
+        $newMessage->setFechaEnvio(new DateTime('now'));
+        $newMessage->setContenido($contenido);
+        $newMessage->setUsuario($usuarioLogueado);
+
+        $chat->addMessage($newMessage);
+
+        $entityManager->persist($newMessage);
+        $entityManager->flush();
+
+        return $this->json($generadorDeMensajes->generarRespuesta('Se envio el mensaje con exito.'));
       } 
       else {
         // No se encuentra el chat con el id enviado
