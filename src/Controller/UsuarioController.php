@@ -94,6 +94,9 @@ class UsuarioController extends AbstractController
     // Se actualizan los datos a la entidad
     $usuario->setPassword($hashedPassword);
 
+    // Se aplican los cambios de la entidad en la bd
+    $entityManager->flush();
+
     $data=['id' => $usuario->getId(),'password' => $usuario->getPassword()];
     
     return $this->json([[$generadorDeMensajes->generarRespuesta("Se ha actualizado la contraseña.", $data)]]);
