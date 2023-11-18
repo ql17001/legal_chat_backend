@@ -175,6 +175,54 @@ class AsesoriaController extends AbstractController
             'totalPages'=> $totalPages
         ]);
     }
+
+    #[Route('/tomar/{id}', name: 'app_asesoria_tomar', methods: ['PUT'])]
+    public function tomarAsesoria(EntityManagerInterface $entityManager, int $id, GeneradorDeMensajes $generadorDeMensajes, Security $security): JsonResponse
+    {
+  
+      // Buscar asesoria que se desea tomar ingresando su id
+      $asesoria = $entityManager->getRepository(Asesoria::class)->find($id);
+  
+      // Si no se encuentra la asesoria con el id ingresado, el programa devuelve error 404
+      if (!$asesoria) {
+        return $this->json($generadorDeMensajes->generarRespuesta('No fue posible encontrar asesoria con el siguiente id: '.$id), 404);
+      }
+
+      if($asesoria->getIdAsesor() !== null || $asesoria->getEstado() !== 's'){
+        return $this->json($generadorDeMensajes->generarRespuesta('No fue posible tomar la asesoria porque ya esta tomada o ya ha terminado.'), 422);
+      }
+
+      $asesoria->setEstado('e');
+
+      $usuario = $security->getUser();
+
+      $asesoria->setIdAsesor($usuario);
+       
+       
+      $cliente_array = [
+        'nombre' => $asesoria->getIdCliente()->getNombre(),
+        'apellido' => $asesoria->getIdCliente()->getApellido(),
+      ];
+
+      $asesor_array = [
+        'nombre' => $asesoria->getIdAsesor()->getNombre(),
+        'apellido' => $asesoria->getIdAsesor()->getApellido(),
+      ];
+
+      $data=['id' => $asesoria->getId(),
+      'nombre' => $asesoria->getNombre(),
+      'estado' => $asesoria->getEstado(),
+      'fecha' => $asesoria->getFecha()->format('d/m/Y, H:i:s'),
+      'cliente' => $cliente_array,
+      'asesor' => $asesor_array
+      ];
+  
+      // Se aplican los cambios y se actualiza la BD 
+      $entityManager->flush();
+  
+      return $this->json($generadorDeMensajes->generarRespuesta("Se ha tomado la asesoria con exito.", $data));
+    }
+
     #[Route('/terminar/{id}', name: 'app_asesoria_update', methods: ['PUT'])]
     public function update(EntityManagerInterface $entityManager, int $id, GeneradorDeMensajes $generadorDeMensajes, Request $request): JsonResponse
     {
@@ -187,7 +235,6 @@ class AsesoriaController extends AbstractController
         return $this->json($generadorDeMensajes->generarRespuesta('No fue posible encontrar asesoria con el siguiente id: '.$id), 404);
       }
        $asesoria->setEstado('t');
-       $asesoria->setFecha(new DateTime('now'));
        $usuario_array = [
         'nombre' => $asesoria->getIdCliente()->getNombre(),
         'apellido' => $asesoria->getIdCliente()->getApellido(),
