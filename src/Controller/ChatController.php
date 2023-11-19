@@ -15,6 +15,9 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Mercure\Authorization;
+use Symfony\Component\Mercure\HubInterface;
+use Symfony\Component\Mercure\Update;
 use Symfony\Component\Routing\Annotation\Route;
 
 #[Route('/chats', name: 'app_chat')]
@@ -78,12 +81,13 @@ class ChatController extends AbstractController
     }
 
     #[Route('/{id}', name: 'app_chat_read_one', methods: ['GET'])]
-    public function readOne(EntityManagerInterface $entityManager, int $id, GeneradorDeMensajes $generadorDeMensajes): JsonResponse
+    public function readOne(EntityManagerInterface $entityManager, int $id, GeneradorDeMensajes $generadorDeMensajes, Request $request, Authorization $authorization): JsonResponse
     {
       // se obtiene los datos del chat
       $chat = $entityManager->getRepository(Chat::class)->find($id);
 
       if($chat !== null){
+        $mercureToken = $authorization->createCookie($request, ['*'])->getValue();
         // se obtiene los datos de la asesoria del chat
         $asesoria = $entityManager->getRepository(Asesoria::class)->find($chat->getIdAsesoria());
 
@@ -114,7 +118,11 @@ class ChatController extends AbstractController
             "id" => $chat->getId(),
             "fechaCreacion" => $chat->getFechaCreacion(),
             "mensajes" => $messages
-          ]
+          ],
+          'mercure' => [
+            'token' => $mercureToken,
+            'topic' => 'https://localhost/chats/'.$chat->getId()
+          ],
         ];
 
         return $this->json($generadorDeMensajes->generarRespuesta('Solicitud procesada con exito.', $chatData));
@@ -126,7 +134,7 @@ class ChatController extends AbstractController
     }
 
     #[Route('/{id}', name: 'app_chat_add_message', methods: ['PUT'])]
-    public function addMessage(EntityManagerInterface $entityManager, int $id, GeneradorDeMensajes $generadorDeMensajes, Request $request, Security $security): JsonResponse
+    public function addMessage(EntityManagerInterface $entityManager, int $id, GeneradorDeMensajes $generadorDeMensajes, Request $request, Security $security, HubInterface $hub): JsonResponse
     {
       // se obtiene los datos del chat
       $chat = $entityManager->getRepository(Chat::class)->find($id);
@@ -148,6 +156,24 @@ class ChatController extends AbstractController
 
         $entityManager->persist($newMessage);
         $entityManager->flush();
+
+        $newMessageData = [
+          'id' => $newMessage->getId(),
+          'contenido' => $newMessage->getContenido(),
+          'fechaEnvio' => $newMessage->getFechaEnvio(),
+          'usuario' => [
+            'nombre' => $newMessage->getUsuario()->getNombre(),
+            'apellido' => $newMessage->getUsuario()->getApellido()
+          ]
+        ];
+
+        $update = new Update(
+          'https://localhost/chats/'.$chat->getId(),
+          json_encode($newMessageData),
+        );
+
+        $hub->publish($update);
+
 
         return $this->json($generadorDeMensajes->generarRespuesta('Se envio el mensaje con exito.'));
       } 
