@@ -62,7 +62,7 @@ class AsesoriaController extends AbstractController
                 $asesor_array = ['nombre' => $asesor->getNombre(), 'apellido' => $asesor->getApellido()];
                 $data[] = [
                     'id' => $asesoria->getId(),
-                    'nombreAsesoria' => $asesoria->getNombre(),
+                    'nombre' => $asesoria->getNombre(),
                     'estado' => $asesoria->getEstado(),
                     'fecha' => $asesoria->getFecha(),
                     'cliente' => $usuario_array,
