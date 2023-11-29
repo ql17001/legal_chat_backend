@@ -1,12 +1,25 @@
 <?php
   namespace App\Service;
 
+use Egulias\EmailValidator\EmailValidator;
+use Egulias\EmailValidator\Validation\RFCValidation;
+
   class Validador {
     // Verificar si la longitud está entre 1 y 100 caracteres
     public function validarNombreApellido($nombreOApellido) {
       $longitud = strlen($nombreOApellido);
       if ($longitud >= 1 && $longitud <= 100) {
         return true; 
+      } else {
+        return false; 
+      }
+    }
+
+    // Verificar si el email es un email valido y no tiene mas de 100 caracteres
+    public function validarEmail($email) {
+      $validator = new EmailValidator();
+      if ($validator->isValid($email, new RFCValidation()) && strlen($email) <= 100) {
+        return true;
       } else {
         return false; 
       }
