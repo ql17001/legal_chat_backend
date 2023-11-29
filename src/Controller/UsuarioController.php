@@ -5,6 +5,7 @@ namespace App\Controller;
 use Symfony\Bundle\SecurityBundle\Security;
 use App\Entity\Usuario;
 use App\Service\GeneradorDeMensajes;
+use App\Service\Validador;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -17,32 +18,69 @@ use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInt
 class UsuarioController extends AbstractController
 {
     #[Route('/registrarme', name: 'app_usuario_real_create', methods: ['POST'])]
-    public function create(EntityManagerInterface $entityManager, Request $request, UserPasswordHasherInterface $passwordHasher, GeneradorDeMensajes $generadorDeMensajes): JsonResponse
+    public function create(EntityManagerInterface $entityManager, Request $request, UserPasswordHasherInterface $passwordHasher, GeneradorDeMensajes $generadorDeMensajes, Validador $validador): JsonResponse
     {
-        $usuario = new Usuario();
-        $usuario->setEmail($request->request->get('email'));
+        $email = $request->request->get('email');
         $plainPassword = $request->request->get('password');
-        $usuario->setNombre($request->request->get('nombre'));
-        $usuario->setApellido($request->request->get('apellido'));
-        $usuario->setDui($request->request->get('dui'));
-        $usuario->setRoles(["Cliente"]);
-        $usuario->setActivo(true);
-        $hashedPassword = $passwordHasher->hashPassword($usuario, $plainPassword);
-        $usuario->setPassword($hashedPassword);
-        // Se avisa a Doctrine que queremos guardar un nuevo registro pero no se ejecutan las consultas
-        $entityManager->persist($usuario);
-        // Se ejecutan las consultas SQL para guardar el nuevo registro
-        $entityManager->flush();
-        $data[] = [
-            'id' => $usuario->getId(),
-            'email' => $usuario->getEmail(),
-            'nombre' => $usuario->getNombre(),
-            'apellido' => $usuario->getApellido(),
-            'dui' => $usuario->getDui()
-        ];            
-        return $this->json([
-            $generadorDeMensajes->generarRespuesta("Se guardó el nuevo usuario.", $data)
-        ]);
+        $nombre = $request->request->get('nombre');
+        $apellido = $request->request->get('apellido');
+        $dui = $request->request->get('dui');
+        
+        $usuarioExiste = $entityManager->getRepository(Usuario::class)->findOneByEmail($email);
+
+        if($usuarioExiste != null){
+          return $this->json(
+            $generadorDeMensajes->generarRespuesta("Ya existe un usuario con ese email."), 400
+          );
+        }
+
+        $errores = [];
+
+        if(!$validador->validarEmail($email)){
+          $errores[] = 'El email no es valido o excede el limite de 100 caracteres.';
+        }
+
+        if(!$validador->validarNombreApellido($nombre) || !$validador->validarNombreApellido($apellido)){
+          $errores[] = 'El nombre y apellido debe tener por lo menos un caracter y maximo 100 caracteres.';
+        }
+
+        if(!$validador->validarDUI($dui)){
+          $errores[] = 'El DUI no debe incluir guion y debe ser un numero de 9 digitos.';
+        }
+
+        if(!$validador->validarContrasenia($plainPassword)){
+          $errores[] = 'La contraseña debe contener 8 caracteres como minimo.';
+        }
+
+        if(count($errores) === 0){
+          $usuario = new Usuario();
+          $usuario->setEmail($email);
+          $usuario->setNombre($nombre);
+          $usuario->setApellido($apellido);
+          $usuario->setDui($dui);
+          $usuario->setRoles(["Cliente"]);
+          $usuario->setActivo(true);
+          $hashedPassword = $passwordHasher->hashPassword($usuario, $plainPassword);
+          $usuario->setPassword($hashedPassword);
+          // Se avisa a Doctrine que queremos guardar un nuevo registro pero no se ejecutan las consultas
+          $entityManager->persist($usuario);
+          // Se ejecutan las consultas SQL para guardar el nuevo registro
+          $entityManager->flush();
+          $data[] = [
+              'id' => $usuario->getId(),
+              'email' => $usuario->getEmail(),
+              'nombre' => $usuario->getNombre(),
+              'apellido' => $usuario->getApellido(),
+              'dui' => $usuario->getDui()
+          ];            
+          return $this->json([
+              $generadorDeMensajes->generarRespuesta("Se guardó el nuevo usuario.", $data)
+          ]);
+        }else{
+          return $this->json(
+            $generadorDeMensajes->generarRespuesta(implode(' ', $errores)), 422
+          );
+        }
     }
 
    #[Route('/perfil', name: 'app_usuario_real_read', methods: ['GET'])]
