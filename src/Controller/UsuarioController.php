@@ -141,8 +141,14 @@ class UsuarioController extends AbstractController
   }
 
     #[Route('/actualizar-informacion', name: 'app_usuario_profile_edit', methods: ['PUT'])]
-  public function updateProfile(EntityManagerInterface $entityManager, Request $request, GeneradorDeMensajes $generadorDeMensajes, Security $security): JsonResponse
+  public function updateProfile(EntityManagerInterface $entityManager, Request $request, GeneradorDeMensajes $generadorDeMensajes, Security $security, Validador $validador): JsonResponse
   {
+
+    // Obtiene los valores del body de la request
+    $nombre = $request->request->get('nombre');
+    $apellido = $request->request->get('apellido');
+    $email = $request->request->get('email');
+    $dui = $request->request->get('dui');
 
     // obtiene el id del usuario mediante el token
     $usuarioLogueado = $security->getUser();
@@ -150,30 +156,44 @@ class UsuarioController extends AbstractController
       $usuarioLogueadoObj = ['id' => $usuarioLogueado->getId()];
       $usuario = $entityManager->getRepository(Usuario::class)->find($usuarioLogueadoObj['id']);
     }
-    
-    // Obtiene los valores del body de la request
-    $nombre = $request->request->get('nombre');
-    $apellido = $request->request->get('apellido');
-    $email = $request->request->get('email');
-    $dui = $request->request->get('dui');
 
     // Si no envia uno responde con un error 422
     if ($nombre == null || $apellido == null || $email == null || $dui == null){
       return $this->json(['error'=>'Se debe enviar toda la informacion del usuario.'], 422);
     }
 
-    // Se actualizan los datos a la entidad
-    $usuario->setNombre($nombre);
-    $usuario->setApellido($apellido);
-    $usuario->setEmail($email);
-    $usuario->setDui($dui);
+    $errores = [];
 
-    $data=['id' => $usuario->getId(), 'nombre' => $usuario->getNombre(), 'apellido' => $usuario->getApellido(), 'email' => $usuario->getEmail(), 'dui' => $usuario->getDui()];
+    if(!$validador->validarEmail($email)){
+      $errores[] = 'El email no es valido o excede el limite de 100 caracteres.';
+    }
 
-    // Se aplican los cambios de la entidad en la bd
-    $entityManager->flush();
+    if(!$validador->validarNombreApellido($nombre) || !$validador->validarNombreApellido($apellido)){
+      $errores[] = 'El nombre y apellido debe tener por lo menos un caracter y maximo 100 caracteres.';
+    }
 
-    return $this->json([$generadorDeMensajes->generarRespuesta("Se actualizó la información del usuario.", $data)]);
+    if(!$validador->validarDUI($dui)){
+      $errores[] = 'El DUI no debe incluir guion y debe ser un numero de 9 digitos.';
+    }
+
+    if(count($errores) === 0){
+      // Se actualizan los datos a la entidad
+      $usuario->setNombre($nombre);
+      $usuario->setApellido($apellido);
+      $usuario->setEmail($email);
+      $usuario->setDui($dui);
+  
+      $data=['id' => $usuario->getId(), 'nombre' => $usuario->getNombre(), 'apellido' => $usuario->getApellido(), 'email' => $usuario->getEmail(), 'dui' => $usuario->getDui()];
+  
+      // Se aplican los cambios de la entidad en la bd
+      $entityManager->flush();
+  
+      return $this->json([$generadorDeMensajes->generarRespuesta("Se actualizó la información del usuario.", $data)]);
+    }else{
+      return $this->json(
+        $generadorDeMensajes->generarRespuesta(implode(' ', $errores)), 422
+      );
+    }
   }
 
   #[Route('/crear', name: 'app_usuario_create', methods: ['POST'])]
