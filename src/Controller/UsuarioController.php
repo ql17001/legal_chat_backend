@@ -107,7 +107,7 @@ class UsuarioController extends AbstractController
   }
 
   #[Route('/actualizar-contraseña', name: 'app_usuario_real_edit', methods: ['PUT'])]
-  public function updatePassword(EntityManagerInterface $entityManager, Request $request, Security $security,UserPasswordHasherInterface $passwordHasher, GeneradorDeMensajes $generadorDeMensajes): JsonResponse
+  public function updatePassword(EntityManagerInterface $entityManager, Request $request, Security $security,UserPasswordHasherInterface $passwordHasher, GeneradorDeMensajes $generadorDeMensajes, Validador $validador, GeneradorDeMensajes $generador): JsonResponse
   {
     //Obtiene el id del usuario usando el token JWT
     $usuarioLogueado = $security->getUser();
@@ -121,9 +121,9 @@ class UsuarioController extends AbstractController
     // Obtiene el valor de la nueva contraseña desde body de la request
     $plainPassword = $request->request->get('password');
 
-    // Si el campo de la nueva contraseña está vacío responde con un error 422
-    if ($plainPassword == null){
-      return $this->json(['error'=>'Se debe enviar la nueva contraseña.'], 422);
+    // Si el campo de la nueva contraseña no es valido responde con un error 422
+    if (!$validador->validarContrasenia($plainPassword)){
+      return $this->json($generador->generarRespuesta("La contraseña debe contener al menos 8 caracteres."), 422);
     }
     
     //Hashea la contraseña
@@ -134,10 +134,8 @@ class UsuarioController extends AbstractController
 
     // Se aplican los cambios de la entidad en la bd
     $entityManager->flush();
-
-    $data=['id' => $usuario->getId(),'password' => $usuario->getPassword()];
     
-    return $this->json([[$generadorDeMensajes->generarRespuesta("Se ha actualizado la contraseña.", $data)]]);
+    return $this->json([[$generadorDeMensajes->generarRespuesta("Se ha actualizado la contraseña.")]]);
   }
 
     #[Route('/actualizar-informacion', name: 'app_usuario_profile_edit', methods: ['PUT'])]
