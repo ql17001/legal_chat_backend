@@ -343,8 +343,16 @@ class UsuarioController extends AbstractController
   }
 
   #[Route('/{id}', name: 'app_usuario_update', methods: ['PUT'])]
-  public function update(EntityManagerInterface $entityManager, int $id, GeneradorDeMensajes $generadorDeMensajes, Request $request, UserPasswordHasherInterface $passwordHasher): JsonResponse
+  public function update(EntityManagerInterface $entityManager, int $id, GeneradorDeMensajes $generadorDeMensajes, Request $request, UserPasswordHasherInterface $passwordHasher, Validador $validador): JsonResponse
   {
+
+    $email = $request->request->get('email');
+    $nombre = $request->request->get('nombre');
+    $apellido = $request->request->get('apellido');
+    $plainPassword = $request->request->get('password');
+    $dui = $request->request->get('dui');
+    $role = json_decode($request->request->get('roles'));
+    
     // Buscar usuario que se desea borrar ingresando su id
     $usuario = $entityManager->getRepository(Usuario::class)->find($id);
 
@@ -353,21 +361,56 @@ class UsuarioController extends AbstractController
       return $this->json($generadorDeMensajes->generarRespuesta('No fue posible encontrar usuario con el siguiente id: '.$id), 404);
     }
 
-    $usuario->setEmail($request->request->get('email'));
-    $plainPassword = $request->request->get('password');
-    $usuario->setNombre($request->request->get('nombre'));
-    $usuario->setApellido($request->request->get('apellido'));
-    $usuario->setDui($request->request->get('dui'));
-    $usuario->setRoles(json_decode($request->request->get('roles')));
-    $hashedPassword = $passwordHasher->hashPassword($usuario, $plainPassword);
-    $usuario->setPassword($hashedPassword);
+    $usuarioExiste = $entityManager->getRepository(Usuario::class)->findOneByEmail($email);
 
-    $data=['id' => $usuario->getId(), 'nombre' => $usuario->getNombre(), 'apellido' => $usuario->getApellido()];
+    if($usuarioExiste != null){
+      return $this->json(
+        $generadorDeMensajes->generarRespuesta("Ya existe un usuario con ese email."), 400
+      );
+    }
 
-    // Se aplican los cambios y se actualiza la BD 
-    $entityManager->flush();
+    $errores = [];
 
-    return $this->json($generadorDeMensajes->generarRespuesta("Se ha actualizado el usuario correctamente.", $data));
+    if(!$validador->validarEmail($email)){
+      $errores[] = 'El email no es valido o excede el limite de 100 caracteres.';
+    }
+
+    if(!$validador->validarNombreApellido($nombre) || !$validador->validarNombreApellido($apellido)){
+      $errores[] = 'El nombre y apellido debe tener por lo menos un caracter y maximo 100 caracteres.';
+    }
+
+    if(!$validador->validarDUI($dui)){
+      $errores[] = 'El DUI no debe incluir guion y debe ser un numero de 9 digitos.';
+    }
+
+    if(!$validador->validarContrasenia($plainPassword)){
+      $errores[] = 'La contraseña debe contener 8 caracteres como minimo.';
+    }
+
+    if(!$validador->validarRoles($role)){
+      $errores[] = 'Los roles deben ser un array de un elemento, y debe ser uno de los siguientes: Administrador, Asesor o Cliente.';
+    }
+
+    if(count($errores) === 0){
+      $usuario->setEmail($email);
+      $usuario->setNombre($nombre);
+      $usuario->setApellido($apellido);
+      $usuario->setDui($dui);
+      $usuario->setRoles($role);
+      $hashedPassword = $passwordHasher->hashPassword($usuario, $plainPassword);
+      $usuario->setPassword($hashedPassword);
+
+      $data=['id' => $usuario->getId(), 'nombre' => $usuario->getNombre(), 'apellido' => $usuario->getApellido()];
+
+      // Se aplican los cambios y se actualiza la BD 
+      $entityManager->flush();
+
+      return $this->json($generadorDeMensajes->generarRespuesta("Se ha actualizado el usuario correctamente.", $data));
+    }else{
+      return $this->json(
+        $generadorDeMensajes->generarRespuesta(implode(' ', $errores)), 422
+      );
+    }
   }
 }
 
