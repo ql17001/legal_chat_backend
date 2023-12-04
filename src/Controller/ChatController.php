@@ -110,6 +110,7 @@ class ChatController extends AbstractController
 
         $chatData = [
           'asesoria' => [
+            "id" => $asesoria->getId(),
             "nombre" => $asesoria->getNombre(),
             "estado" => $asesoria->getEstado(),
             "fecha" => $asesoria->getFecha(),
