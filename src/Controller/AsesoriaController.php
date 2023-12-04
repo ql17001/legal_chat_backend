@@ -14,6 +14,7 @@ use Symfony\Component\Routing\Annotation\Route;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use App\Controller\UserPasswordHasherInterface;
+use DateTimeZone;
 
 #[Route('/asesorias', name: 'app_asesoria')]
 class AsesoriaController extends AbstractController
@@ -98,7 +99,7 @@ class AsesoriaController extends AbstractController
         $asesoria = new Asesoria();
         $asesoria->setNombre($request->request->get('nombre'));
         $asesoria->setEstado('s');
-        $asesoria->setFecha(new DateTime('now'));
+        $asesoria->setFecha(new DateTime("now", new DateTimeZone("America/El_Salvador")));
         $usuario = $security->getUser();
         if ($usuario !== null && $usuario instanceof Usuario) {
             $usuarioid = ['id' => $usuario->getId()];

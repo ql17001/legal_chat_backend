@@ -8,6 +8,7 @@ use App\Entity\Message;
 use App\Entity\Usuario;
 use App\Service\GeneradorDeMensajes;
 use DateTime;
+use DateTimeZone;
 use Doctrine\ORM\EntityManagerInterface;
 use PhpParser\Node\Expr\Empty_;
 use stdClass;
@@ -151,7 +152,7 @@ class ChatController extends AbstractController
       if($chat !== null){
         $newMessage = new Message();
 
-        $newMessage->setFechaEnvio(new DateTime('now'));
+        $newMessage->setFechaEnvio(new DateTime("now", new DateTimeZone("America/El_Salvador")));
         $newMessage->setContenido($contenido);
         $newMessage->setUsuario($usuarioLogueado);
 
