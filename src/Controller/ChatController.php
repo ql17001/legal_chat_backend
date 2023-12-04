@@ -98,6 +98,8 @@ class ChatController extends AbstractController
             "fechaEnvio" => $message->getFechaEnvio(),
             "contenido" => $message->getContenido(),
             "usuario" => [
+              "id" => $message->getUsuario()->getId(),
+              "email" => $message->getUsuario()->getEmail(),
               "nombre" => $message->getUsuario()->getNombre(),
               "apellido" => $message->getUsuario()->getApellido()
             ]
