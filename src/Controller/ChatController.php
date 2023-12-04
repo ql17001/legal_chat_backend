@@ -95,6 +95,7 @@ class ChatController extends AbstractController
 
         foreach($chat->getMessages() as $message) {
           $messages[] = [
+            "id" => $message->getId(),
             "fechaEnvio" => $message->getFechaEnvio(),
             "contenido" => $message->getContenido(),
             "usuario" => [
@@ -164,6 +165,8 @@ class ChatController extends AbstractController
           'contenido' => $newMessage->getContenido(),
           'fechaEnvio' => $newMessage->getFechaEnvio(),
           'usuario' => [
+            'id' => $newMessage->getUsuario()->getId(),
+            'email' => $newMessage->getUsuario()->getEmail(),
             'nombre' => $newMessage->getUsuario()->getNombre(),
             'apellido' => $newMessage->getUsuario()->getApellido()
           ]
