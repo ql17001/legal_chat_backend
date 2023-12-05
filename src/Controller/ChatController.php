@@ -126,7 +126,7 @@ class ChatController extends AbstractController
           ],
           'mercure' => [
             'token' => $mercureToken,
-            'topic' => 'https://localhost/chats/'.$chat->getId()
+            'topic' => $_ENV['MERCURE_PUBLIC_URL_BASE'].'/chats/'.$chat->getId()
           ],
         ];
 
@@ -175,7 +175,7 @@ class ChatController extends AbstractController
         ];
 
         $update = new Update(
-          'https://localhost/chats/'.$chat->getId(),
+          $_ENV['MERCURE_URL_BASE'].'/chats/'.$chat->getId(),
           json_encode($newMessageData),
         );
 
